@@ -1,5 +1,6 @@
 /// One way to implement a queue is to use a linked list; however, that requires a lot of dynamic memory manipulation to add/remove individual items.
-/// A more low-level approach is to use a circular buffer: the compromise is that the capacity of the queue is then "fixed". For a background on circular buffers,
+/// A more low-level approach is to use a circular buffer: the compromise is that the capacity of the queue is then "fixed".
+/// For a background on circular buffers,
 /// you can consult https://en.wikipedia.org/wiki/Circular_buffer
 
 // A partial implementation is provided below; please finish it and add some more methods; please remember to run 'cargo fmt' and 'cargo clippy' after
@@ -12,22 +13,22 @@
 
 // 3) change the method 'new()' into 'new(size: usize)' that initializes a ring buffer of the given size (instead of a fixed size of 16); use the 'make_box' function.
 
-// 4) in a queue that has size N, how many elements can be stored at one time? (test your answer experimentally)
+// 4) in a queue that has size N, how many elements can be stored at one time? (test your answer experimentally) N-1 ITEMS!
 
 // 5) EXTRA EXERCISES:
 //  - add a method "has_room" so that "queue.has_room()" is true if and only if writing to the queue will succeed
 //  - add a method "peek" so that "queue.peek()" returns the same thing as "queue.read()", but leaves the element in the queue
 
 struct RingBuffer {
-    data: [u8; 16],
+    data: Box<[u8]>,
     start: usize,
     end: usize,
 }
 
 impl RingBuffer {
-    fn new() -> RingBuffer {
+    fn new(size: usize) -> RingBuffer {
         RingBuffer {
-            data: [0; 16],
+            data: make_box(size),
             start: 0,
             end: 0,
         }
@@ -37,7 +38,21 @@ impl RingBuffer {
     /// it returns None if the queue was empty
 
     fn read(&mut self) -> Option<u8> {
-        todo!()
+        if self.start == self.end {
+            None
+        } else {
+            let value = self.data[self.start];
+            self.start = (self.start + 1) % self.data.len();
+            Some(value)
+        }
+    }
+
+    fn peek(&self) -> Option<u8> {
+        if self.start == self.end {
+            None
+        } else {
+            Some(self.data[self.start])
+        }
     }
 
     /// This function tries to put `value` on the queue; and returns true if this succeeds
@@ -55,6 +70,11 @@ impl RingBuffer {
             true
         }
     }
+
+    fn has_room(&self) -> bool {
+        (self.end + 1) % self.data.len() != self.start
+    }
+
 }
 
 /// This function creates an "owned slice" a user-selectable size by allocating it as a vector (filled with zeores) using vec![], and then turning it
@@ -74,13 +94,29 @@ impl Iterator for RingBuffer {
     }
 }
 
+
 fn main() {
-    let mut queue = RingBuffer::new();
+    let mut queue = RingBuffer::new(16);
     assert!(queue.write(1));
     assert!(queue.write(2));
     assert!(queue.write(3));
     assert!(queue.write(4));
     assert!(queue.write(5));
+    assert!(queue.write(6));
+    assert!(queue.write(7));
+    assert!(queue.write(8));
+    assert!(queue.write(9));
+    assert!(queue.write(10));
+    assert!(queue.write(11));
+    assert!(queue.write(12));
+    assert!(queue.write(13));
+    assert!(queue.write(14));
+    assert!(queue.write(15));
+    if queue.has_room() {
+        assert!(queue.write(16));
+    }
+    println!("{:?}", queue.peek());
+    println!("{:?}", queue.peek());
     for elem in queue {
         println!("{elem}");
     }
